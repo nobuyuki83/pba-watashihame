@@ -121,11 +121,35 @@ void nearest_kdtree(
   if ((pos - pos_in).norm() < (pos_near - pos_in).norm()) { pos_near = pos; } // update the nearest position
 
   if (i_depth % 2 == 0) { // division in x direction
-    nearest_kdtree(pos_near, pos_in, nodes, nodes[idx_node].idx_node_left, x_min, pos.x(), y_min, y_max, i_depth + 1);
-    nearest_kdtree(pos_near, pos_in, nodes, nodes[idx_node].idx_node_right, pos.x(), x_max, y_min, y_max, i_depth + 1);
+    float dis_left = signed_distance_aabb(pos_in, x_min, pos.x(), y_min, y_max);
+    float dis_right = signed_distance_aabb(pos_in, pos.x(), x_max, y_min, y_max);
+    if(dis_left < dis_right)
+    {
+      nearest_kdtree(pos_near, pos_in, nodes, nodes[idx_node].idx_node_left, x_min, pos.x(), y_min, y_max, i_depth + 1);
+      if(dis_right < (pos_near - pos_in).norm())
+        nearest_kdtree(pos_near, pos_in, nodes, nodes[idx_node].idx_node_right, pos.x(), x_max, y_min, y_max, i_depth + 1);
+    }
+    else
+    {
+      nearest_kdtree(pos_near, pos_in, nodes, nodes[idx_node].idx_node_right, pos.x(), x_max, y_min, y_max, i_depth + 1);
+      if(dis_left < (pos_near - pos_in).norm())
+        nearest_kdtree(pos_near, pos_in, nodes, nodes[idx_node].idx_node_left, x_min, pos.x(), y_min, y_max, i_depth + 1);
+    }
   } else { // division in y-direction
-    nearest_kdtree(pos_near, pos_in, nodes, nodes[idx_node].idx_node_left, x_min, x_max, y_min, pos.y(), i_depth + 1);
-    nearest_kdtree(pos_near, pos_in, nodes, nodes[idx_node].idx_node_right, x_min, x_max, pos.y(), y_max, i_depth + 1);
+    float dis_left = signed_distance_aabb(pos_in, x_min, x_max, y_min, pos.y());
+    float dis_right = signed_distance_aabb(pos_in, x_min, x_max, pos.y(), y_max);
+    if(dis_left < dis_right)
+    {
+      nearest_kdtree(pos_near, pos_in, nodes, nodes[idx_node].idx_node_left, x_min, x_max, y_min, pos.y(), i_depth + 1);
+      if(dis_right < (pos_near - pos_in).norm())
+        nearest_kdtree(pos_near, pos_in, nodes, nodes[idx_node].idx_node_right, x_min, x_max, pos.y(), y_max, i_depth + 1);
+    }
+    else
+    {
+      nearest_kdtree(pos_near, pos_in, nodes, nodes[idx_node].idx_node_right, x_min, x_max, pos.y(), y_max, i_depth + 1);
+      if(dis_left < (pos_near - pos_in).norm())
+        nearest_kdtree(pos_near, pos_in, nodes, nodes[idx_node].idx_node_left, x_min, x_max, y_min, pos.y(), i_depth + 1);
+    }
   }
 }
 
@@ -205,7 +229,7 @@ int main() {
 
   std::vector<Node> nodes;
   { // constructing Kd-tree's node
-    std::vector<Eigen::Vector2f> particles(100); // set number of particles
+    std::vector<Eigen::Vector2f> particles(20000); // set number of particles
     for (auto &p: particles) { // // set coordinates
       p = Eigen::Vector2f::Random() * box_size * 0.5f;
     }

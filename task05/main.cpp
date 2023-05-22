@@ -27,9 +27,10 @@ void wdw_spring_3d(
   const float length = (node2xyz[0] - node2xyz[1]).norm(); // distance between p0 and p1
   const float C = length - length_ini; // the length differences.
   w = 0.5f * stiffness * C * C; // Hooke's law. energy is square of length difference W=1/2*k*C*C
-
   // write a few lines of code below to compute the gradient of elastic energy of this spring
   // with respect to the positions of the two end points.
+  dw[0] = stiffness * C / length * (node2xyz[0] - node2xyz[1]);
+  dw[1] = stiffness * C / length * (node2xyz[1] - node2xyz[0]);
 }
 
 float gradient_descent_energy_minimization(
@@ -73,7 +74,7 @@ float gradient_descent_energy_minimization(
 }
 
 int main() {
-  constexpr float learning_rate = 6.5e-3f;
+  constexpr float learning_rate = 1e-3f;
   constexpr int num_theta = 64;
   const auto[tri2vtx, vtx2xyz_ini] = pba::generate_mesh_annulus3(0.3, 0.8, 32, num_theta);
   const auto line2vtx = pba::lines_of_mesh(tri2vtx, static_cast<int>(vtx2xyz_ini.rows()));
